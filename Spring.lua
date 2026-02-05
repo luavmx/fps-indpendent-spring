@@ -51,11 +51,11 @@ function spring:Shove(force)
 	end
 
 	local endVector = Vector3.new(x, y, z)
-	self.velocity = self.velocity + (curr_Delta * 60) * endVector
+	self.velocity = self.velocity + (curr_Delta * workspace:GetRealPhysicsFPS()) * endVector
 end
 
 function spring:Update(deltaTime)
-	deltaTime = math.clamp(deltaTime, 0, 1 / 30)
+	--deltaTime = math.clamp(deltaTime, 0, 1 / 30)
 
 	local scaledDeltaTime = deltaTime * self.speed / iterations
 	curr_Delta = deltaTime
