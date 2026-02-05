@@ -1,72 +1,76 @@
 --[[
+	Edited by LuaVMX to use normal OOP
+
 	Hello! This spring module was originally made by x_o but was FPS dependant so I (ONXXF on roblox, mosleyite. on discord) edited it to make it work at any FPS
 	DevForum post: https://devforum.roblox.com/t/modified-spring-module/2690943
 --]]
 
 -- Services
-local RunService = game:GetService('RunService')
+local runService = game:GetService('RunService')
 
 -- Config
-local Iterations = 8
+local iterations = 8
 
 -- Data
 local last_Time = tick()
 local curr_Delta = 0
 
 -- Module
-local SpringModule = {}
+local spring = {}
+spring.__index = spring
 
 -- Functions
-function SpringModule.Create(self, Mass, Force, Damping, Speed)
-	local Spring = {
-		Target      = Vector3.new(),
-		Position    = Vector3.new(),
-		Velocity    = Vector3.new(),
-
-		Mass        = Mass or 5,
-		Force       = Force or 50,
-		Damping     = Damping or 4,
-		Speed       = Speed  or 4,
-	}
+function spring.new(mass, force, damping, speed)
+	local self = setmetatable({}, spring)
 	
-	function Spring.Shove(self, Force)
-		local X, Y, Z = Force.X, Force.Y, Force.Z
-		
-		if X ~= X or X == math.huge or X == -math.huge then
-			X = 0
-		end
-		
-		if Y ~= Y or Y == math.huge or Y == -math.huge then
-			Y = 0
-		end
-		
-		if Z ~= Z or Z == math.huge or Z == -math.huge then
-			Z = 0
-		end
-		
-		local EndVector = Vector3.new(X, Y, Z)
-		self.Velocity = self.Velocity + (curr_Delta * 60) * EndVector
-	end
+	self.target = Vector3.new()
+	self.position = Vector3.new()
+	self.velocity = Vector3.new()
 
-	function Spring.Update(self, Delta)
-		local ScaledDeltaTime = Delta * self.Speed / Iterations
-		curr_Delta = Delta
-		
-		for Index = 1, Iterations do
-			local IterationForce = self.Target - self.Position
-			local Acceleration = (IterationForce * self.Force) / self.Mass
+	self.mass = mass or 5
+	self.force = force or 50
+	self.damping = damping or 4
+	self.speed = speed or 4
 
-			Acceleration = Acceleration - self.Velocity * self.Damping
-
-			self.Velocity = self.Velocity + Acceleration * ScaledDeltaTime
-			self.Position = self.Position + self.Velocity * ScaledDeltaTime
-		end
-
-		return self.Position
-	end
-
-	return Spring
+	return self
 end
 
--- Return
-return SpringModule
+function spring:Shove(force)
+	local x, y, z = force.X, force.Y, force.Z
+
+	if x ~= x or x == math.huge or x == -math.huge then
+		x = 0
+	end
+
+	if y ~= y or y == math.huge or y == -math.huge then
+		y = 0
+	end
+
+	if z ~= z or z == math.huge or z == -math.huge then
+		z = 0
+	end
+
+	local endVector = Vector3.new(x, y, z)
+	self.velocity = self.velocity + (curr_Delta * 60) * endVector
+end
+
+function spring:Update(deltaTime)
+	deltaTime = math.clamp(deltaTime, 0, 1 / 30)
+
+	local scaledDeltaTime = deltaTime * self.speed / iterations
+	curr_Delta = deltaTime
+
+	for i = 1, iterations do
+		local iterationForce = self.target - self.position
+		local acceleration = (iterationForce * self.force) / self.mass
+
+		acceleration = acceleration - self.velocity * self.damping
+
+		self.velocity = self.velocity + acceleration * scaledDeltaTime
+		self.position = self.position + self.velocity * scaledDeltaTime
+	end
+
+	return self.velocity
+end
+
+return spring
